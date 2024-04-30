@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+    <html>
+        <head>
+            <title>
+                Productivity Calculator
+            </title>
+        </head>
+        <header>
+            <h1>
+                Productivity Calculator
+            </h1>
+        </header>
+        <body>
+            <div class="ingredient-form">
+                <form action="/submit-ingredient" method="post">
+                    <h2>Ingredient name</h2>
+                    <input
+                        type="text"
+                        id="ingredient-name"
+                        name="name"
+                    ><br>
+                    <h2>Number of products used in</h2>
+                    <input
+                        type="number"
+                        id="num-used-in"
+                        name="usedIn"
+                    ><br>
+                    <h2>Quantity of case</h2>
+                    <input
+                        type="number"
+                        id="qty-per-case"
+                        name="qtyPerCase"
+                    >
+                    <select
+                        id="uom-case"
+                        name="uomCase"
+                    >
+                        <option value="Grams">Grams</option>
+                        <option value="Milligrams">Milligrams</option>
+                        <option value="Ounces">Ounces</option>
+                        <option value="Pounds">Pounds</option>
+                        <option value="Pieces">Pieces</option>
+                    </select><br>
+                    <h2>Price per case</h2>
+                    <input
+                        type="number"
+                        id="price-per-case"
+                        name="pricePerCase"
+                    ><br>
+                    <button type="submit">
+                        Submit
+                    </button>
+                </form>
+            </div>
+            <div id="task-form" class="task-form">
+                <form action="/submit-task" method="post">
+                    <h2>Product name</h2>
+                    <input
+                        type="text"
+                        id="product-name"
+                        name="product-name"
+                    ><br>
+
+                    <h2>Ingredients</h2>
+                    <div id="additional-ingredients">
+
+                    </div>
+                    <button type="button" id="add-another-ingredient">Add an ingredient</button>
+
+                    <h2>Steps</h2>
+                    <div id="additional-steps">
+
+                    </div>
+                    <button 
+                        type="button"
+                        id="add-another-step"
+                    >
+                        Add a step
+                    </button><br>
+
+                    <h2>Amount of products this makes</h2>
+                    <input
+                        type="number"
+                        id="makes-qty"
+                        name="makes-qty"
+                    ><br>
+
+                    <h2>Price per product</h2>
+                    <input
+                        type="number"
+                        id="product-price"
+                        name="product-price"
+                    ><br>
+
+                    <h2>Average sales per day</h2>
+                    <input
+                        type="number"
+                        id="sales-day"
+                        name="sales-day"
+                    ><br>
+                    <button type="submit">
+                        Submit
+                    </button>
+                </form>
+            </div>
+            <div class="people-form" id="people-form">
+                <form action="/submit-person" method="post">
+                    <h2>Person name</h2>
+                    <input
+                        type="text"
+                        id="person-name"
+                        name="person-name"
+                    ><br>
+
+                    <h2>Hourly rate</h2>
+                    <input
+                        type="number"
+                        id="hourly-rate"
+                        name="hourly-rate"
+                    ><br>
+                    <button type="submit">
+                        Submit
+                    </button>
+                </form>
+            </div>
+            <script>
+                let ingredientCounter = 1;
+                let stepCounter = 1;
+
+                function fetchIngredientDetails(ingredientName, ingredientQty, ingredientUom) {
+                    console.log(ingredientName);
+                
+                return new Promise((resolve, reject) => {
+                    fetch(`/ingredient/${ingredientName}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Ingredient not found');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        casePrice = data.pricePerCase;
+                        uomCase = data.uomCase;
+                        caseQty = data.qtyPerCase;
+                        costPerBatch = 0
+                        conversionCase = 0
+                        conversionIngredient = 0
+
+                        switch (uomCase) {
+                            case 'Grams':
+                                conversionCase = caseQty / 28;
+                                break
+                            case 'Ounces':
+                                conversionCase = caseQty;
+                                break
+                            case 'Pounds':
+                            conversionCase = caseQty * 0.0625;
+                                break
+                            default:
+                            conversionCase = caseQty;   
+                        }
+
+                        switch (ingredientUom) {
+                            case 'Grams':
+                                conversionIngredient = ingredientQty / 28;
+                                break
+                            case 'Ounces':
+                                conversionIngredient = ingredientQty;
+                                break
+                            case 'Pounds':
+                                conversionIngredient = ingredientQty * 0.0625;
+                                break
+                            default:
+                                conversionIngredient = ingredientQty;                          
+                        }
+
+                        costPerOunce = (casePrice / conversionCase)
+                        costPerBatch = (costPerOunce * conversionIngredient)
+
+                        
+                        console.log(`${caseQty} ${uomCase}, is ${conversionCase} ounces, Costs ${casePrice} per case and ${costPerOunce} per ounce`)
+                        console.log(`${ingredientQty} ${ingredientUom}, is ${conversionIngredient} ounce`)
+                        console.log(`It costs $${costPerBatch} of ${ingredientName} to make a batch of this product`)
+
+                        resolve(costPerBatch);
+                    })
+                    .catch(error => {
+                        console.log(`Error: ${error}`);
+                        reject(error);
+                    });
+                })
+                
+                }
+            
+                function addIngredientField() {
+                    const additionalIngredients = document.getElementById('additional-ingredients');
+                    const newField = document.createElement('div');
+                    newField.classList.add('form-field');
+                    newField.innerHTML = `
+                        <h3>Ingredient name</h3>
+                        <select id="ingredient-name-${ingredientCounter}" name="ingredient-name[]"></select>
+                        <h3>Quantity</h3>
+                        <input id="ingredient-qty-${ingredientCounter}" type="number" name="ingredient-qty[]"><br>
+                        <select
+                        id="uom-${ingredientCounter}"
+                        name="uom[]"
+                        >
+                            <option value="Grams">Grams</option>
+                            <option value="Milligrams">Milligrams</option>
+                            <option value="Ounces">Ounces</option>
+                            <option value="Pounds">Pounds</option>
+                            <option value="Pieces">Pieces</option>
+                        </select>
+                        <button type="button" class="delete-field">Delete</button>
+                    `;
+                    additionalIngredients.appendChild(newField);
+
+                    newField.querySelector('.delete-field').addEventListener('click', function() {
+                        additionalIngredients.removeChild(newField);
+                    });
+            
+                    fetch('ingredients.json')
+                        .then(response => response.json())
+                        .then(data => {
+                            const option = document.createElement('option');
+                                data.ingredients.forEach(ingredient => {
+                                option.value = ingredient.name;
+                                option.text = ingredient.name;
+
+                                const newSelect = newField.querySelector('select[name="ingredient-name[]"]');
+                                const clonedOption = option.cloneNode(true);
+                                newSelect.appendChild(clonedOption);
+                            });
+                        })
+                        .catch(error => {
+                            console.error(`Couldn't fetch ingredients: ${error}`);
+                        });
+            
+                    ingredientCounter++;
+                }
+            
+                document.getElementById("add-another-ingredient").addEventListener("click", addIngredientField);
+
+                function addStepField() {
+                    const additionalSteps = document.getElementById('additional-steps');
+                    const newField = document.createElement('div');
+                    newField.classList.add('form-field');
+                    newField.innerHTML = `
+                        <h3>Description</h3>
+                        <input id="step-description-${stepCounter}" type="text" name="steps[]"><br>
+                        <h3>Time taken for step</h3>
+                        <input id="step-time-${stepCounter}" type="number" name="steps[]"><br>
+                        <select
+                        id="uot-${stepCounter}"
+                        name="uot[]"
+                        >
+                            <option value="Minutes">Minutes</option>
+                            <option value="Hours">Hours</option>
+                        </select>
+                        
+                        <button type="button" class="delete-field">Delete</button>
+                    `;
+                    additionalSteps.appendChild(newField);
+
+                    newField.querySelector('.delete-field').addEventListener('click', function() {
+                        additionalSteps.removeChild(newField);
+                    });
+            
+                    stepCounter++;
+                }
+
+                document.getElementById("add-another-step").addEventListener("click", addStepField);
+
+                document.getElementById('task-form').addEventListener('submit', async function(event) {
+                    event.preventDefault(); 
+
+                    const ingredients = [];
+                    const selectedIngredients = [];
+                    const promises = [];
+                    totalBatchCost = 0;
+
+
+                    for (let i = 1; i < ingredientCounter; i++) {
+                        console.log(`Trying to select ingredient ${i}`);
+                        const ingredientName = document.querySelector(`#ingredient-name-${i}`).value;
+                        const ingredientQty = document.querySelector(`#ingredient-qty-${i}`).value;
+                        const ingredientUom = document.querySelector(`#uom-${i}`).value;
+                        selectedIngredients.push(ingredientName);
+                        
+
+                        promises.push(fetchIngredientDetails(ingredientName, ingredientQty, ingredientUom)
+                            .then(costPerBatch => {
+                                ingredients.push({ name: ingredientName, qty: ingredientQty, uom: ingredientUom, costPerBatch: costPerBatch });
+                                totalBatchCost += costPerBatch;
+                            })
+                            .catch(error => {
+                                console.error(`Error fetching details: ${error}`);
+                            })
+                        );
+                    } 
+
+                    await Promise.all(promises);
+
+                    const productName = document.getElementById('product-name').value;
+                    const productPrice = document.getElementById('product-price').value;
+                    const taskMakes = document.getElementById('makes-qty').value;
+                    const avgSales = document.getElementById('sales-day').value;
+                    totalTime = 0;
+
+                    const steps = [];
+
+                    for (let i = 1; i < stepCounter; i++) {
+                        const stepDescription = document.querySelector(`#step-description-${i}`).value;
+                        let stepTime = parseInt(document.querySelector(`#step-time-${i}`).value);
+                        const stepUot = document.querySelector(`#uot-${i}`).value;
+
+                        if (stepUot === 'Hours') {
+                            stepTime *= 60;
+                            totalTime += stepTime;
+                        } else {
+                            totalTime += stepTime;
+                        }
+
+                        steps.push({ description: stepDescription, time: stepTime, uot: stepUot });
+                    }
+
+                    totalTime /= 60;
+
+                    const newTask = {
+                        name: productName,
+                        ingredients: ingredients,
+                        steps: steps,
+                        price: productPrice,
+                        makes: taskMakes,
+                        average_sales_day: avgSales,
+                        batchPrice: totalBatchCost,
+                        totalTime: totalTime
+                    }
+
+                        fetch('/submit-task', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(newTask)
+                        })
+                        .then(response => {
+                            if (response.ok) {
+                                console.log(`Task submitted successfully.`);
+                            } else {
+                                console.error(`Failed to submit.`);
+                            }
+                        })
+                        .catch(error => {
+                            console.error(`Error: ${error}`);
+                        });
+                });
+            </script>
+            
+        </body>
+    </html>
