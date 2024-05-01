@@ -65,7 +65,12 @@
                     <div id="additional-ingredients">
 
                     </div>
-                    <button type="button" id="add-another-ingredient">Add an ingredient</button>
+                    <button
+                        type="button"
+                        id="add-another-ingredient"
+                    >
+                        Add an ingredient
+                    </button>
 
                     <h2>Steps</h2>
                     <div id="additional-steps">
@@ -76,6 +81,17 @@
                         id="add-another-step"
                     >
                         Add a step
+                    </button><br>
+
+                    <h2>People</h2>
+                    <div id="additional-people">
+
+                    </div>
+                    <button 
+                        type="button"
+                        id="add-another-person"
+                    >
+                        Add a person
                     </button><br>
 
                     <h2>Amount of products this makes</h2>
@@ -98,7 +114,9 @@
                         id="sales-day"
                         name="sales-day"
                     ><br>
-                    <button type="submit">
+                    <button
+                        type="submit"
+                    >
                         Submit
                     </button>
                 </form>
@@ -108,24 +126,49 @@
                     <h2>Person name</h2>
                     <input
                         type="text"
-                        id="person-name"
-                        name="person-name"
+                        id="person_name"
+                        name="person_name"
                     ><br>
 
                     <h2>Hourly rate</h2>
                     <input
                         type="number"
-                        id="hourly-rate"
-                        name="hourly-rate"
+                        id="hourly_rate"
+                        name="hourly_rate"
                     ><br>
-                    <button type="submit">
+                    <button
+                        type="submit"
+                    >
                         Submit
                     </button>
                 </form>
             </div>
+
             <script>
                 let ingredientCounter = 1;
                 let stepCounter = 1;
+                let personCounter = 1;
+
+                function fetchPersonDetails(personName) {
+                    return new Promise((resolve, reject) => {
+                        fetch(`/people/${personName}`)
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error(`Person not found`);
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            hourlyRate = data.hourly_rate;
+
+                            resolve(hourlyRate);
+                        })
+                        .catch(error => {
+                            console.log(`Error: ${error}`);
+                            reject(error);
+                        });
+                    })
+                }
 
                 function fetchIngredientDetails(ingredientName, ingredientQty, ingredientUom) {
                     console.log(ingredientName);
@@ -134,7 +177,7 @@
                     fetch(`/ingredient/${ingredientName}`)
                     .then(response => {
                         if (!response.ok) {
-                            throw new Error('Ingredient not found');
+                            throw new Error(`Ingredient not found`);
                         }
                         return response.json();
                     })
@@ -147,40 +190,40 @@
                         conversionIngredient = 0
 
                         switch (uomCase) {
-                            case 'Grams':
-                                conversionCase = caseQty / 28;
+                            case `Grams`:
+                                conversionCase = (caseQty / 28).toFixed(2);
                                 break
-                            case 'Ounces':
+                            case `Ounces`:
                                 conversionCase = caseQty;
                                 break
-                            case 'Pounds':
-                            conversionCase = caseQty * 0.0625;
+                            case `Pounds`:
+                                conversionCase = (caseQty * 16).toFixed(2);
                                 break
                             default:
-                            conversionCase = caseQty;   
+                                conversionCase = caseQty;   
                         }
 
                         switch (ingredientUom) {
-                            case 'Grams':
-                                conversionIngredient = ingredientQty / 28;
+                            case `Grams`:
+                                conversionIngredient = (ingredientQty / 28).toFixed(2);
                                 break
-                            case 'Ounces':
+                            case `Ounces`:
                                 conversionIngredient = ingredientQty;
                                 break
-                            case 'Pounds':
-                                conversionIngredient = ingredientQty * 0.0625;
+                            case `Pounds`:
+                                conversionIngredient = (ingredientQty * 16).toFixed(2);
                                 break
                             default:
                                 conversionIngredient = ingredientQty;                          
                         }
 
-                        costPerOunce = (casePrice / conversionCase)
-                        costPerBatch = (costPerOunce * conversionIngredient)
+                        costPerOunce = (casePrice / conversionCase).toFixed(2);
+                        costPerBatch = (costPerOunce * conversionIngredient).toFixed(2);
 
                         
-                        console.log(`${caseQty} ${uomCase}, is ${conversionCase} ounces, Costs ${casePrice} per case and ${costPerOunce} per ounce`)
-                        console.log(`${ingredientQty} ${ingredientUom}, is ${conversionIngredient} ounce`)
-                        console.log(`It costs $${costPerBatch} of ${ingredientName} to make a batch of this product`)
+                        console.log(`${caseQty} ${uomCase}, is ${conversionCase} ounces, Costs ${casePrice} per case and ${costPerOunce} per ounce`);
+                        console.log(`${ingredientQty} ${ingredientUom}, is ${conversionIngredient} ounce`);
+                        console.log(`It costs $${costPerBatch} of ${ingredientName} to make a batch of this product`);
 
                         resolve(costPerBatch);
                     })
@@ -191,11 +234,48 @@
                 })
                 
                 }
+
+                function addPersonField() {
+                    const additionalPerson = document.getElementById(`additional-people`);
+                    const newField = document.createElement(`div`);
+                    newField.classList.add(`form-field`);
+                    newField.innerHTML = `
+                        <h3>Person name</h3>
+                        <select id="person-name-${personCounter}" name="person-name[]"></select>
+                        <button type="button" class="delete-field">Delete</button>
+                    `;
+                    additionalPerson.appendChild(newField);
+
+                    newField.querySelector(`.delete-field`).addEventListener(`click`, function() {
+                        additionalPerson.removeChild(newField);
+                    });
+
+                    fetch(`people.json`)
+                        .then(response => response.json())
+                        .then(data => {
+                            const option = document.createElement(`option`);
+                                data.people.forEach(people => {
+                                    option.value = people.person_name;
+                                    option.text = people.person_name;
+
+                                    const newSelect = newField.querySelector(`select[name="person-name[]"]`);
+                                    const clonedOption = option.cloneNode(true);
+                                    newSelect.appendChild(clonedOption);
+                                });
+                        })
+                        .catch(error => {
+                            console.error(`Couldn't fetch people: ${error}`);
+                        });
+
+                        personCounter++;
+                }
+
+                document.getElementById(`add-another-person`).addEventListener(`click`, addPersonField);
             
                 function addIngredientField() {
-                    const additionalIngredients = document.getElementById('additional-ingredients');
-                    const newField = document.createElement('div');
-                    newField.classList.add('form-field');
+                    const additionalIngredients = document.getElementById(`additional-ingredients`);
+                    const newField = document.createElement(`div`);
+                    newField.classList.add(`form-field`);
                     newField.innerHTML = `
                         <h3>Ingredient name</h3>
                         <select id="ingredient-name-${ingredientCounter}" name="ingredient-name[]"></select>
@@ -215,19 +295,19 @@
                     `;
                     additionalIngredients.appendChild(newField);
 
-                    newField.querySelector('.delete-field').addEventListener('click', function() {
+                    newField.querySelector(`.delete-field`).addEventListener(`click`, function() {
                         additionalIngredients.removeChild(newField);
                     });
             
-                    fetch('ingredients.json')
+                    fetch(`ingredients.json`)
                         .then(response => response.json())
                         .then(data => {
-                            const option = document.createElement('option');
+                            const option = document.createElement(`option`);
                                 data.ingredients.forEach(ingredient => {
                                 option.value = ingredient.name;
                                 option.text = ingredient.name;
 
-                                const newSelect = newField.querySelector('select[name="ingredient-name[]"]');
+                                const newSelect = newField.querySelector(`select[name="ingredient-name[]"]`);
                                 const clonedOption = option.cloneNode(true);
                                 newSelect.appendChild(clonedOption);
                             });
@@ -239,12 +319,12 @@
                     ingredientCounter++;
                 }
             
-                document.getElementById("add-another-ingredient").addEventListener("click", addIngredientField);
+                document.getElementById(`add-another-ingredient`).addEventListener(`click`, addIngredientField);
 
                 function addStepField() {
-                    const additionalSteps = document.getElementById('additional-steps');
-                    const newField = document.createElement('div');
-                    newField.classList.add('form-field');
+                    const additionalSteps = document.getElementById(`additional-steps`);
+                    const newField = document.createElement(`div`);
+                    newField.classList.add(`form-field`);
                     newField.innerHTML = `
                         <h3>Description</h3>
                         <input id="step-description-${stepCounter}" type="text" name="steps[]"><br>
@@ -262,22 +342,40 @@
                     `;
                     additionalSteps.appendChild(newField);
 
-                    newField.querySelector('.delete-field').addEventListener('click', function() {
+                    newField.querySelector(`.delete-field`).addEventListener(`click`, function() {
                         additionalSteps.removeChild(newField);
                     });
             
                     stepCounter++;
                 }
 
-                document.getElementById("add-another-step").addEventListener("click", addStepField);
+                document.getElementById(`add-another-step`).addEventListener(`click`, addStepField);
 
-                document.getElementById('task-form').addEventListener('submit', async function(event) {
+                document.getElementById(`task-form`).addEventListener(`submit`, async function(event) {
                     event.preventDefault(); 
 
                     const ingredients = [];
+                    const people = [];
                     const selectedIngredients = [];
                     const promises = [];
                     totalBatchCost = 0;
+
+                    for (let i = 1; i <personCounter; i++) {
+                        console.log(`Trying to select person ${i}`);
+                        const personName = document.querySelector(`#person-name-${i}`).value;
+                        
+                        promises.push(fetchPersonDetails(personName)
+                            .then(hourlyRate => {
+                                people.push({
+                                    name: personName,
+                                    hourly_rate: hourlyRate
+                                });
+                            })
+                            .catch(error => {
+                                console.error(`Error fetching details: ${error}`);
+                            })
+                        );
+                    }
 
 
                     for (let i = 1; i < ingredientCounter; i++) {
@@ -290,7 +388,13 @@
 
                         promises.push(fetchIngredientDetails(ingredientName, ingredientQty, ingredientUom)
                             .then(costPerBatch => {
-                                ingredients.push({ name: ingredientName, qty: ingredientQty, uom: ingredientUom, costPerBatch: costPerBatch });
+                                costPerBatch = parseFloat(costPerBatch);
+                                ingredients.push({
+                                    name: ingredientName,
+                                    qty: ingredientQty,
+                                    uom: ingredientUom,
+                                    costPerBatch: costPerBatch
+                                });
                                 totalBatchCost += costPerBatch;
                             })
                             .catch(error => {
@@ -301,11 +405,15 @@
 
                     await Promise.all(promises);
 
-                    const productName = document.getElementById('product-name').value;
-                    const productPrice = document.getElementById('product-price').value;
-                    const taskMakes = document.getElementById('makes-qty').value;
-                    const avgSales = document.getElementById('sales-day').value;
+                    const productName = document.getElementById(`product-name`).value;
+                    const productPrice = document.getElementById(`product-price`).value;
+                    const taskMakes = document.getElementById(`makes-qty`).value;
+                    const avgSales = document.getElementById(`sales-day`).value;
                     totalTime = 0;
+                    laborCost = 0;
+                    totalLaborCost = 0;
+                    potentialGross = 0;
+                    potentialProfit = 0;
 
                     const steps = [];
 
@@ -314,17 +422,31 @@
                         let stepTime = parseInt(document.querySelector(`#step-time-${i}`).value);
                         const stepUot = document.querySelector(`#uot-${i}`).value;
 
-                        if (stepUot === 'Hours') {
+                        if (stepUot === `Hours`) {
                             stepTime *= 60;
                             totalTime += stepTime;
                         } else {
                             totalTime += stepTime;
                         }
 
-                        steps.push({ description: stepDescription, time: stepTime, uot: stepUot });
+                        steps.push({
+                            description: stepDescription,
+                            time: stepTime,
+                            uot: stepUot
+                        });
                     }
 
                     totalTime /= 60;
+
+                    people.forEach(person => {
+                        laborCost = (totalTime * hourlyRate).toFixed(2);
+                        laborCost = parseFloat(laborCost);
+                        totalLaborCost += laborCost;
+                    });
+
+                    potentialGross = productPrice * taskMakes;
+
+                    potentialProfit = potentialGross - totalLaborCost - totalBatchCost;
 
                     const newTask = {
                         name: productName,
@@ -334,11 +456,15 @@
                         makes: taskMakes,
                         average_sales_day: avgSales,
                         batchPrice: totalBatchCost,
-                        totalTime: totalTime
+                        totalTime: totalTime,
+                        people: people,
+                        totalLaborCost: totalLaborCost,
+                        potentialGross: potentialGross,
+                        potentialProfit: potentialProfit
                     }
 
-                        fetch('/submit-task', {
-                            method: 'POST',
+                        fetch(`/submit-task`, {
+                            method: `POST`,
                             headers: {
                                 'Content-Type': 'application/json'
                             },

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+    <html>
+        <head>
+            <title>
+                Lists
+            </title>
+        </head>
+        <body>
+            <div>
+                <table id="people-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Hourly Rate</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                    </tbody>
+                </table>
+            </div>
+            <div>
+                <table id="ingredient-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Used in</th>
+                            <th>Quantity</th>
+                            <th>Price/case</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                    </tbody>
+                </table>
+            </div>
+            <div>
+                <h2>
+                    Tasks
+                </h2>
+            </div>
+            <script>
+                function populatePeopleTable() {
+                    const tableBody = document.querySelector(`#people-table tbody`);
+                    tableBody.innerHTML = ``;
+
+                    fetch(`people.json`)
+                        .then(response => response.json())
+                        .then(data => {
+                                data.people.forEach(person => {
+
+                                    const row = document.createElement(`tr`);
+                                    row.innerHTML = `
+                                        <td>${person.person_name}</td>
+                                        <td>${person.hourly_rate}</td>
+                                    `;
+                                    tableBody.appendChild(row);
+                                }); 
+                        })
+                        .catch(error => {
+                            console.error(`Couldn't fetch people: ${error}`);
+                        });
+                }
+
+                function populateIngredientTable() {
+                    const tableBody = document.querySelector(`#ingredient-table tbody`);
+                    tableBody.innerHTML = ``;
+
+                    fetch(`ingredients.json`)
+                        .then(response => response.json())
+                        .then(data => {
+                            data.ingredients.forEach(ingredient => {
+                                const row = document.createElement(`tr`);
+                                row.innerHTML = `
+                                    <td>${ingredient.name}</td>
+                                    <td>${ingredient.usedIn}</td>
+                                    <td>${ingredient.qtyPerCase} ${ingredient.uomCase}</td>
+                                    <td>${ingredient.pricePerCase}</td>
+                                `;
+                                tableBody.appendChild(row);
+                            });
+                        }).catch(error => {
+                            console.error(`Couldn't fetch ingredients: ${error}`);
+                        });
+                }
+
+                populatePeopleTable();
+                populateIngredientTable();
+            </script>
+        </body>
+    </html>
