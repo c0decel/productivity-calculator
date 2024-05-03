@@ -21,6 +21,16 @@ app.get(`/calculator`, (req, res) => {
     res.sendFile(`${__dirname}/calculator.html`)
 });
 
+app.get('/functions.js', function(req, res) {
+    res.setHeader('Content-Type', 'application/javascript');
+    res.sendFile(`${__dirname}/functions.js`)
+});
+
+app.get('/calculatorFunctions.js', function(req, res) {
+    res.setHeader('Content-Type', 'application/javascript');
+    res.sendFile(`${__dirname}/calculatorFunctions.js`)
+});
+
 
 app.post(`/submit-ingredient`, (req, res) => {
     const newIngredient = req.body;
@@ -36,7 +46,7 @@ app.post(`/submit-ingredient`, (req, res) => {
                         res.status(500).send(`Error writing.`);
                         return;
                     }
-                    console.log(`Saved.`)
+                    console.log(`Saved.`);
                     res.send(`Saved to ingredients.json`);
                 });
             } else {
@@ -229,12 +239,46 @@ app.get(`/ingredient/:Name`, (req, res) => {
     });
 });
 
+app.get(`/task/:Name`, (req, res) => {
+    const taskName = req.params.Name;
+
+    fs.readFile(`public/tasks.json`, `utf8`, (err, data) => {
+        if (err) {
+            console.error(`Error reading tasks.json: ${err}`);
+            res.status(500).send(`Error reading tasks.json`);
+            return;
+        }
+
+        const taskData = JSON.parse(data);
+
+        const foundTask = taskData.tasks.find(task => task.name === taskName);
+        
+        if (foundTask) {
+            res.json({
+                name: foundTask.name,
+                ingredients: foundTask.ingredients,
+                steps: foundTask.steps,
+                dailySales: foundTask.average_sales_day,
+                batchPrice: foundTask.batchPrice,
+                totalTime: foundTask.totalTime,
+                potentialGross: foundTask.potentialGross,
+                potentialProfit: foundTask.potentialProfit,
+                makes: foundTask.makes,
+                productPrice: foundTask.price
+            });
+        } else {
+            res.status(404).send(`Task not found.`);
+        }
+
+    });
+});
+
 
 app.get(`/ingredients.json`, (req, res) => {
     fs.readFile(`public/ingredients.json`, `utf8`, (err, data) => {
         if (err) {
             console.error(`Error reading: ${err}`);
-                        res.status(500).send(`Error reading.`);
+                res.status(500).send(`Error reading.`);
             return;
         }
 

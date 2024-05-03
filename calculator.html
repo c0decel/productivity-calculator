@@ -11,7 +11,7 @@
             </h1>
         </header>
         <body>
-            <div class="calculator-form">
+            <div class="assignment-form">
                 <form>
                     <h2>Profit goal</h2>
                     <input
@@ -20,13 +20,24 @@
                         name="profit-goal"
                     ><br>
 
+
                     <h2>Task</h2>
-                    <div id="additional-tasks">
+                    <div id="additional-task">
+
+                    <div id="task-details">
+
+                    </div>
                         
                     </div>
 
-                    <h2>People focused on this task</h2>
-                    <button type="button">
+                    <button 
+                        type="button"
+                        id="add-another-task"
+                    >
+                        Add a task
+                    </button><br>
+
+                    <button onclick="calculateProductivity()" type="button">
                         Calculate
                     </button>
                 </form>
@@ -38,8 +49,6 @@
                     <p id="difference-from-goal"></p>
                 </div>
             </div>
-            <script>
-
-            </script>
+            <script src="/calculatorFunctions.js"></script>
         </body>
     </html>
